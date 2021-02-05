@@ -1,3 +1,4 @@
+'use strict'
 const { createReadStream, stat } = require('fs')
 const { isAbsolute, join, basename } = require('path')
 const { promisify } = require('util')
