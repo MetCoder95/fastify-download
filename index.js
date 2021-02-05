@@ -1,6 +1,6 @@
 'use strict'
 const { createReadStream, stat } = require('fs')
-const { isAbsolute, join, basename } = require('path')
+const { isAbsolute, join, basename, resolve } = require('path')
 const { promisify } = require('util')
 const ms = require('ms')
 const { contentType } = require('mime-types')
@@ -41,7 +41,7 @@ function getDownload (globalOptions) {
 
     const { root, allowDotfiles } = options
     const path = validatePath(file, root, allowDotfiles)
-    const fullPath = root ? join(root, path) : path
+    const fullPath = resolve(root ? join(root, path) : path)
     const headers = getHeaders(filename, options)
 
     if (options.lastModified) {
@@ -74,15 +74,19 @@ function getDownload (globalOptions) {
   }
 
   function validatePath (file, root, allowDotfiles) {
+    if (!file) throw new Error("'file' arg is required")
+
+    if (typeof file !== 'string') throw new Error("'file' arg should be string")
+
     if (!isAbsolute(file) && !root) {
       throw new Error("'file' must be absolute or specify 'root'")
     }
 
-    if (allowDotfiles || !DOT_FILE_REGEX.test(file)) {
-      return file
+    if (!allowDotfiles && DOT_FILE_REGEX.test(file)) {
+      throw new Error('dotfiles not allowed')
     }
 
-    throw new Error('dotfiles not allowed')
+    return file
   }
 
   function getHeaders (filename, options) {
